@@ -8,9 +8,27 @@ cat sans.toml > "$OUTPUT"
 echo >> "$OUTPUT"
 echo >> "$OUTPUT"
 
+cat sans.toml \
+	| sed -E 's/IosevkaCustom/IosevkaCustomTerminal/' \
+	| sed -E 's/family = "[^"]+"/family = "Iosevka Custom Terminal"/' \
+	| sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
+	>> "$OUTPUT"
+
+echo >> "$OUTPUT"
+echo >> "$OUTPUT"
+
 cat slab.toml \
 	| sed -E 's/IosevkaCustom/IosevkaCustomSlab/' \
 	| sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab"/' \
+	>> "$OUTPUT"
+
+echo >> "$OUTPUT"
+echo >> "$OUTPUT"
+
+cat slab.toml \
+	| sed -E 's/IosevkaCustom/IosevkaCustomSlabTerminal/' \
+	| sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab Terminal"/' \
+	| sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
 	>> "$OUTPUT"
 
 rm -rf ./dist
@@ -24,6 +42,10 @@ docker run --rm -t \
   --volume "$PWD/dist:/app/dist" \
   --volume "$PWD/private-build-plans.toml:/app/private-build-plans.toml" \
   mikewhy/docker-iosevka-custom-build:latest \
-  npm run build ttf::IosevkaCustom ttf::IosevkaCustomSlab
+  npm run build \
+    ttf::IosevkaCustom \
+    ttf::IosevkaCustomTerminal \
+    ttf::IosevkaCustomSlab \
+    ttf::IosevkaCustomSlabTerminal
 
-find dist -type d -name ttf-unhinted -exec rm -rf {} \;
+rm -rf dist/*/TTF-Unhinted
