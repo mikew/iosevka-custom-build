@@ -35,7 +35,7 @@ rm -rf ./dist
 mkdir -p ./.build ./font-glyphs ./font-otl ./dist
 docker pull mikewhy/docker-iosevka-custom-build:latest
 docker run --rm -t \
-  --user "$UID" \
+  --env "PUID=$UID" \
   --volume "$PWD/.build:/app/.build" \
   --volume "$PWD/font-glyphs:/app/packages/font-glyphs" \
   --volume "$PWD/font-otl:/app/packages/font-otl" \

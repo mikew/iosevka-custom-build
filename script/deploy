@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -ex
+
+RELEASE_TAG="release-$(date "+%F-%H-%M")"
+
+zip -r mikew-iosevka-custom.zip dist/
+
+gh release create "$RELEASE_TAG" --generate-notes --target "$GITHUB_SHA"
+gh release upload "$RELEASE_TAG" mikew-iosevka-custom.zip
