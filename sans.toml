@@ -19,7 +19,6 @@ noLigation = true
     r = "top-serifed"
     w = "straight-flat-top-serifless"
     zero = "slashed"
-    five = "upright-flat"
     eight = "two-circles"
     nine = "straight-bar"
     asterisk = "hex-low"
