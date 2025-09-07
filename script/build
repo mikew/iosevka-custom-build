@@ -56,7 +56,7 @@ docker run --rm \
   -v "$PWD/dist:/in" \
   -v "$PWD/dist/nerd:/out" \
   nerdfonts/patcher \
-    --makegroups 4 \
+    --makegroups -1 \
     --progressbars \
     --mono \
     --has-no-italic \
