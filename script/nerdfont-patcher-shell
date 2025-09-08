@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -ex
+
+exec docker run --rm \
+  -v "$PWD/dist:/in" \
+  -v "$PWD/dist/nerd:/out" \
+  -v "$PWD/script/nerdfont-patcher-postprocess:/nerdfont-patcher-postprocess" \
+  -v "$PWD/script/nerdfont-patcher-entrypoint:/nerdfont-patcher-entrypoint" \
+  -it \
+  --entrypoint sh \
+  nerdfonts/patcher \
+    -s

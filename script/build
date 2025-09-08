@@ -9,27 +9,27 @@ echo >> "$OUTPUT"
 echo >> "$OUTPUT"
 
 cat sans.toml \
-	| sed -E 's/IosevkaCustom/IosevkaCustomTerminal/' \
-	| sed -E 's/family = "[^"]+"/family = "Iosevka Custom Terminal"/' \
-	| sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
-	>> "$OUTPUT"
+  | sed -E 's/IosevkaCustom/IosevkaCustomTerminal/' \
+  | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Terminal"/' \
+  | sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
+  >> "$OUTPUT"
 
 echo >> "$OUTPUT"
 echo >> "$OUTPUT"
 
 cat slab.toml \
-	| sed -E 's/IosevkaCustom/IosevkaCustomSlab/' \
-	| sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab"/' \
-	>> "$OUTPUT"
+  | sed -E 's/IosevkaCustom/IosevkaCustomSlab/' \
+  | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab"/' \
+  >> "$OUTPUT"
 
 echo >> "$OUTPUT"
 echo >> "$OUTPUT"
 
 cat slab.toml \
-	| sed -E 's/IosevkaCustom/IosevkaCustomSlabTerminal/' \
-	| sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab Terminal"/' \
-	| sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
-	>> "$OUTPUT"
+  | sed -E 's/IosevkaCustom/IosevkaCustomSlabTerminal/' \
+  | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab Terminal"/' \
+  | sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
+  >> "$OUTPUT"
 
 rm -rf ./dist
 mkdir -p ./.build ./font-glyphs ./font-otl ./dist
@@ -49,3 +49,21 @@ docker run --rm -t \
     ttf::IosevkaCustomSlabTerminal
 
 rm -rf dist/*/TTF-Unhinted
+
+# https://github.com/ryanoasis/nerd-fonts/blob/master/src/unpatched-fonts/IosevkaTermSlab/config.cfg
+docker pull nerdfonts/patcher:latest
+docker run --rm \
+  -v "$PWD/dist:/in" \
+  -v "$PWD/dist/nerd:/out" \
+  -v "$PWD/script/nerdfont-patcher-postprocess:/nerdfont-patcher-postprocess" \
+  -v "$PWD/script/nerdfont-patcher-entrypoint:/nerdfont-patcher-entrypoint" \
+  --entrypoint /nerdfont-patcher-entrypoint \
+  nerdfonts/patcher \
+    --makegroups -1 \
+    --progressbars \
+    --mono \
+    --has-no-italic \
+    --complete \
+    --metrics HHEA \
+    --postprocess /nerdfont-patcher-postprocess \
+    --careful
