@@ -55,10 +55,15 @@ docker pull nerdfonts/patcher:latest
 docker run --rm \
   -v "$PWD/dist:/in" \
   -v "$PWD/dist/nerd:/out" \
+  -v "$PWD/script/nerdfont-patcher-postprocess:/nerdfont-patcher-postprocess" \
+  -v "$PWD/script/nerdfont-patcher-entrypoint:/nerdfont-patcher-entrypoint" \
+  --entrypoint /nerdfont-patcher-entrypoint \
   nerdfonts/patcher \
     --makegroups -1 \
     --progressbars \
     --mono \
     --has-no-italic \
     --complete \
+    --metrics HHEA \
+    --postprocess /nerdfont-patcher-postprocess \
     --careful

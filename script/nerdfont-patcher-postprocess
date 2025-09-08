@@ -1,0 +1,71 @@
+#!/bin/sh
+# Copy only hhea.ascent/descent/lineGap from the original input font in /in
+# Usage (called by patcher): nerdfont-patcher-postprocess OUTPUT_FONT_FILE
+# Env:
+#   NFPP_IN_DIR=/in         # input fonts dir (default /in)
+#   NFPP_FAIL_ON_MISS=1     # exit non-zero if no input match found
+#   NFPP_VERBOSE=1          # print debug
+
+set -eu
+
+log() { [ "${NFPP_VERBOSE:-}" ] && printf '%s\n' "$*" >&2 || :; }
+need() { command -v "$1" >/dev/null 2>&1 || { echo "Error: missing '$1'" >&2; exit 2; }; }
+
+[ $# -eq 1 ] || { echo "Usage: $0 OUTPUT_FONT_FILE" >&2; exit 2; }
+OUT="$1"
+[ -f "$OUT" ] || { echo "Output font not found: $OUT" >&2; exit 2; }
+
+IN_DIR="${NFPP_IN_DIR:-/in}"
+[ -d "$IN_DIR" ] || { echo "Input directory not found: $IN_DIR" >&2; exit 2; }
+
+need ttx
+need mktemp
+
+OUT_BASE="$(basename "$OUT")"
+INPUT="$(find "$IN_DIR" -type f -name "$OUT_BASE" -print | head -n 1 || true)"
+
+if [ -z "${INPUT:-}" ] || [ ! -f "$INPUT" ]; then
+  msg="[nf-postprocess] No matching input font for $OUT_BASE in $IN_DIR"
+  if [ "${NFPP_FAIL_ON_MISS:-}" ]; then
+    echo "$msg" >&2
+    exit 1
+  else
+    log "$msg — leaving output as-is."
+    exit 0
+  fi
+fi
+
+log "[nf-postprocess] Using input hhea from: $INPUT"
+
+WD="$(mktemp -d "${TMPDIR:-/tmp}/nfpp.XXXXXX")"
+cleanup() { rm -rf "$WD"; }
+trap cleanup EXIT INT HUP TERM
+
+# Dump hhea from INPUT and OUTPUT
+IN_HHEA_TTX="$WD/in_hhea.ttx"
+OUT_HHEA_TTX="$WD/out_hhea.ttx"
+ttx -q -o "$IN_HHEA_TTX"  -t hhea "$INPUT"
+ttx -q -o "$OUT_HHEA_TTX" -t hhea "$OUT"
+
+# Read values from INPUT
+IN_ASCENT=$(awk -F'"' '/<ascent[[:space:]]/ {print $2; exit}'   "$IN_HHEA_TTX")
+IN_DESCENT=$(awk -F'"' '/<descent[[:space:]]/ {print $2; exit}'  "$IN_HHEA_TTX")
+IN_LINEGAP=$(awk -F'"' '/<lineGap[[:space:]]/ {print $2; exit}'  "$IN_HHEA_TTX")
+
+# Patch only those three attributes in OUTPUT's hhea.ttx
+OUT_HHEA_MOD="$WD/out_hhea_mod.ttx"
+awk -v A="$IN_ASCENT" -v D="$IN_DESCENT" -v G="$IN_LINEGAP" '
+  /<ascent[[:space:]]/  { sub(/value="[^"]+"/, "value=\"" A "\"") }
+  /<descent[[:space:]]/ { sub(/value="[^"]+"/, "value=\"" D "\"") }
+  /<lineGap[[:space:]]/ { sub(/value="[^"]+"/, "value=\"" G "\"") }
+  { print }
+' "$OUT_HHEA_TTX" > "$OUT_HHEA_MOD"
+
+# Merge the modified hhea back into the OUTPUT font
+MERGED="$WD/merged.ttf"
+ttx -q -o "$MERGED" -m "$OUT" "$OUT_HHEA_MOD"
+
+# Replace atomically
+cp -f "$MERGED" "$OUT"
+log "[nf-postprocess] Updated hhea fields on $(basename "$OUT") to ascent=$IN_ASCENT descent=$IN_DESCENT lineGap=$IN_LINEGAP"
+exit 0
