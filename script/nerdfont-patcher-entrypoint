@@ -2,7 +2,7 @@
 
 apk add --update py3-fonttools
 
-NERDFONT_PATCHER_ENTRYPOINT="/nerd/bin/scripts/nerdfont-patcher-entrypoint.sh"
+NERDFONT_PATCHER_ENTRYPOINT="/nerd/bin/scripts/docker-entrypoint.sh"
 
 chmod +x "$NERDFONT_PATCHER_ENTRYPOINT"
 "$NERDFONT_PATCHER_ENTRYPOINT" "$@"
