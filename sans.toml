@@ -25,6 +25,9 @@ noLigation = true
     brace = "curly-flat-boundary"
     at = "fourfold"
 
+  [buildPlans.IosevkaCustom.metricOverride]
+  leading = 1300
+
 [buildPlans.IosevkaCustom.weights.Regular]
 shape = 400
 menu = 400
