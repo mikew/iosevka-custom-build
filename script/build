@@ -82,6 +82,8 @@ NERDFONT_DOCKER_COMMAND=(
   --complete
 
   --postprocess /nerdfont-patcher-postprocess
+
+  --quiet
 )
 
 # https://github.com/ryanoasis/nerd-fonts/blob/master/src/unpatched-fonts/IosevkaTermSlab/config.cfg
