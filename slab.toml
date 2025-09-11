@@ -26,7 +26,7 @@ noLigation = true
     at = "fourfold"
 
   [buildPlans.IosevkaCustom.metricOverride]
-  leading = 1300
+  leading = 1500
 
 [buildPlans.IosevkaCustom.weights.Regular]
 shape = 400
