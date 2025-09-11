@@ -52,7 +52,7 @@ IOSEVKA_DOCKER_COMMAND=(
   # ttf::IosevkaCustomSlabTerminal
 )
 
-rm -rf ./dist
+rm -rf ./dist || echo "Could not remove dist/"
 mkdir -p ./.build ./font-glyphs ./font-otl ./dist
 docker pull mikewhy/docker-iosevka-custom-build:latest
 docker run --rm -t \
