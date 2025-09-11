@@ -3,67 +3,92 @@ set -ex
 
 OUTPUT="private-build-plans.toml"
 
-cat sans.toml > "$OUTPUT"
+# cat sans.toml > "$OUTPUT"
 
-echo >> "$OUTPUT"
-echo >> "$OUTPUT"
+# echo >> "$OUTPUT"
+# echo >> "$OUTPUT"
 
-cat sans.toml \
-  | sed -E 's/IosevkaCustom/IosevkaCustomTerminal/' \
-  | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Terminal"/' \
-  | sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
-  >> "$OUTPUT"
+# cat sans.toml \
+#   | sed -E 's/IosevkaCustom/IosevkaCustomTerminal/' \
+#   | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Terminal"/' \
+#   | sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
+#   >> "$OUTPUT"
 
-echo >> "$OUTPUT"
-echo >> "$OUTPUT"
+# echo >> "$OUTPUT"
+# echo >> "$OUTPUT"
+
+echo > "$OUTPUT"
 
 cat slab.toml \
   | sed -E 's/IosevkaCustom/IosevkaCustomSlab/' \
   | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab"/' \
   >> "$OUTPUT"
 
-echo >> "$OUTPUT"
-echo >> "$OUTPUT"
+# echo >> "$OUTPUT"
+# echo >> "$OUTPUT"
 
-cat slab.toml \
-  | sed -E 's/IosevkaCustom/IosevkaCustomSlabTerminal/' \
-  | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab Terminal"/' \
-  | sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
-  >> "$OUTPUT"
+# cat slab.toml \
+#   | sed -E 's/IosevkaCustom/IosevkaCustomSlabTerminal/' \
+#   | sed -E 's/family = "[^"]+"/family = "Iosevka Custom Slab Terminal"/' \
+#   | sed -E 's/spacing = "[^"]+"/spacing = "term"/' \
+#   >> "$OUTPUT"
 
-rm -rf ./dist
+IOSEVKA_DOCKER_ARGS=(
+  --env "PUID=$UID"
+
+  --volume "$PWD/private-build-plans.toml:/app/private-build-plans.toml"
+  --volume "$PWD/dist:/app/dist"
+
+  --volume "$PWD/.build:/app/.build"
+  --volume "$PWD/font-glyphs:/app/packages/font-glyphs"
+  --volume "$PWD/font-otl:/app/packages/font-otl"
+)
+
+IOSEVKA_DOCKER_COMMAND=(
+  npm run build
+  # ttf::IosevkaCustom
+  # ttf::IosevkaCustomTerminal
+  ttf::IosevkaCustomSlab
+  # ttf::IosevkaCustomSlabTerminal
+)
+
+rm -rf ./dist || echo "Could not remove dist/"
 mkdir -p ./.build ./font-glyphs ./font-otl ./dist
 docker pull mikewhy/docker-iosevka-custom-build:latest
 docker run --rm -t \
-  --env "PUID=$UID" \
-  --volume "$PWD/.build:/app/.build" \
-  --volume "$PWD/font-glyphs:/app/packages/font-glyphs" \
-  --volume "$PWD/font-otl:/app/packages/font-otl" \
-  --volume "$PWD/dist:/app/dist" \
-  --volume "$PWD/private-build-plans.toml:/app/private-build-plans.toml" \
+  "${IOSEVKA_DOCKER_ARGS[@]}" \
   mikewhy/docker-iosevka-custom-build:latest \
-  npm run build \
-    ttf::IosevkaCustom \
-    ttf::IosevkaCustomTerminal \
-    ttf::IosevkaCustomSlab \
-    ttf::IosevkaCustomSlabTerminal
+  "${IOSEVKA_DOCKER_COMMAND[@]}"
 
 rm -rf dist/*/TTF-Unhinted
+
+NERDFONT_DOCKER_ARGS=(
+  --entrypoint /nerdfont-patcher-entrypoint
+  --env "PUID=$UID"
+
+  --volume "$PWD/dist:/in"
+  --volume "$PWD/dist/nerd:/out"
+
+  --volume "$PWD/script/nerdfont-patcher-postprocess:/nerdfont-patcher-postprocess"
+  --volume "$PWD/script/nerdfont-patcher-entrypoint:/nerdfont-patcher-entrypoint"
+)
+
+NERDFONT_DOCKER_COMMAND=(
+  --makegroups -1
+  --has-no-italic
+  --mono
+
+  --careful
+  --complete
+
+  --postprocess /nerdfont-patcher-postprocess
+
+  --quiet
+)
 
 # https://github.com/ryanoasis/nerd-fonts/blob/master/src/unpatched-fonts/IosevkaTermSlab/config.cfg
 docker pull nerdfonts/patcher:latest
 docker run --rm \
-  -v "$PWD/dist:/in" \
-  -v "$PWD/dist/nerd:/out" \
-  -v "$PWD/script/nerdfont-patcher-postprocess:/nerdfont-patcher-postprocess" \
-  -v "$PWD/script/nerdfont-patcher-entrypoint:/nerdfont-patcher-entrypoint" \
-  --entrypoint /nerdfont-patcher-entrypoint \
+  "${NERDFONT_DOCKER_ARGS[@]}" \
   nerdfonts/patcher \
-    --makegroups -1 \
-    --progressbars \
-    --mono \
-    --has-no-italic \
-    --complete \
-    --metrics HHEA \
-    --postprocess /nerdfont-patcher-postprocess \
-    --careful
+  "${NERDFONT_DOCKER_COMMAND[@]}" \
